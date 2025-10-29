@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  codex-db:
+    image: postgres:16-alpine
+    container_name: codex-db
+    environment: 
+      POSTGRES_DB: codex_db
+      POSTGRES_USER: codex_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - codex-net
+    restart: unless-stopped
+
+  codex-backend:
+    build:
+      context: ./codex-backend
+      dockerfile: Dockerfile
+    container_name: codex-backend
+    ports:
+      - "8081:8080"
+    environment:
+      DB_HOST: codex-db
+      DB_PORT: 5432
+      DB_NAME: codex_db
+      DB_USER: codex_user
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      TokenSettings__Key: ${TokenSettings__Key}
+      TokenSettings__Issuer: ${TokenSettings__Issuer}
+      TokenSettings__Audience: ${TokenSettings__Audience}
+      TokenSettings__ExpiresInDays: ${TokenSettings__ExpiresInDays}
+
+    networks:
+      - codex-net
+    depends_on:
+      - codex-db
+    restart: unless-stopped
+
+  codex-frontend:
+    build:
+      context: ./codex-frontend
+      dockerfile: Dockerfile
+    container_name: codex-frontend
+    ports:
+      - "3000:3000"
+    environment: 
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:8081
+      INTERNAL_API_BASE_URL: http://codex-backend:8080
+      AUTH_SECRET: ${AUTH_SECRET}
+    networks:
+      - codex-net
+    depends_on:
+      - codex-backend 
+    restart: unless-stopped
+  
+networks:
+  codex-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local

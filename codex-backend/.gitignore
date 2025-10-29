@@ -1,0 +1,20 @@
+# Dependency directories
+bin/
+obj/
+
+# User-specific files
+*.user
+*.suo
+
+# Environment files
+.env
+
+# Rider files
+.idea/
+
+# Visual Studio Code files
+.vscode/
+
+
+# Garantir que appsettings.json não será enviado ao repositório
+/appsettings.json
